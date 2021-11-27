@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb-container
+    hostname: mongodb-container
+    environment:
+      MONGO_INITDB_DATABASE: $MONGO_INITDB_DATABASE
+      MONGO_INITDB_ROOT_USERNAME: $MONGO_INITDB_ROOT_USERNAME
+      MONGO_INITDB_ROOT_PASSWORD: $MONGO_INITDB_ROOT_PASSWORD
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongodb/config/mongod.conf:/etc/mongod.conf
+      - ./mongodb/db/:/data/db/
+      - ./mongodb/config/initdb.d/:/docker-entrypoint-initdb.d/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "5"
+    command: --config /etc/mongod.conf
+  nightscout:
+    build: ./nightscout
+    container_name: nightscout-container
+    hostname: nightscout-container
+    environment:
+      TZ: $TIMEZONE
+      NODE_ENV: production
+      INSECURE_USE_HTTP: 'true'
+      SECURE_HSTS_HEADER: 'false'
+      API_SECRET: $API_SECRET
+      MONGO_CONNECTION: $MONGO_CONNECTION
+      ENABLE: $ENABLE
+    depends_on:
+      - mongodb
+    ports:
+      - 1337:1337
